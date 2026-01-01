@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User } from 'src/generated/prisma/client';
+import bcrypt from 'bcryptjs';
 
 
 @Injectable()
@@ -11,7 +12,7 @@ export class UsersService {
         return this.prisma.user.findMany();
     }
 
-    async findOne(id: string): Promise<User> {
+    async findById(id: string): Promise<User> {
         const user = await this.prisma.user.findUnique({ where: { id } });
         if (!user) {
             throw new NotFoundException(`User with id ${id} not found`);
@@ -23,11 +24,19 @@ export class UsersService {
         return this.prisma.user.findUnique({ where: { email } });
     }
 
-    async create(data: Prisma.UserCreateInput): Promise<User> {
+    async hashPassword(password: string): Promise<string> {
+        const saltRounds = 10;
+        return bcrypt.hash(password, saltRounds);
+    }
+
+    async comparePasswords(password: string, hash: string): Promise<boolean> {
+        return bcrypt.compare(password, hash);
+    }
+
+    async create(data: Prisma.UserCreateInput) {
         try {
             return await this.prisma.user.create({ data });
         } catch (err: any) {
-            // Prisma unique constraint error code = P2002
             if (err.code === 'P2002' && err.meta?.target?.includes('email')) {
                 throw new ConflictException('Email already exists');
             }
@@ -35,7 +44,7 @@ export class UsersService {
         }
     }
 
-    async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+    async update(id: string, data: Prisma.UserUpdateInput) {
         try {
             return await this.prisma.user.update({
                 where: { id },
@@ -49,7 +58,7 @@ export class UsersService {
         }
     }
 
-    async delete(id: string): Promise<User> {
+    async delete(id: string) {
         try {
             return await this.prisma.user.delete({ where: { id } });
         } catch (err: any) {
