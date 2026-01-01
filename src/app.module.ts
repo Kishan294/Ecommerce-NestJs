@@ -8,6 +8,12 @@ import { CategoriesModule } from './categories/categories.module';
 import { HealthController } from './health/health.controller'; // if you have
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CartService } from './cart/cart.service';
+import { CartController } from './cart/cart.controller';
+import { CartModule } from './cart/cart.module';
+import { OrdersService } from './orders/orders.service';
+import { OrdersController } from './orders/orders.controller';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -17,8 +23,10 @@ import { AppService } from './app.service';
     AuthModule,
     ProductsModule,
     CategoriesModule,
+    CartModule,
+    OrdersModule,
   ],
-  controllers: [AppController, HealthController],
-  providers: [AppService],
+  controllers: [AppController, HealthController, CartController, OrdersController],
+  providers: [AppService, CartService, OrdersService],
 })
 export class AppModule { }
