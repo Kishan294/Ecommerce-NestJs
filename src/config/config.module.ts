@@ -13,13 +13,8 @@ import * as Joi from 'joi';
                     .default('development'),
                 PORT: Joi.number().default(3000),
 
-                // We'll add DB, JWT, etc. later
-                // DATABASE_URL: Joi.string().required(),
-                // JWT_SECRET: Joi.string().when('NODE_ENV', {
-                //   is: 'production',
-                //   then: Joi.required(),
-                //   otherwise: Joi.optional(),
-                // }),
+                DATABASE_URL: Joi.string().required(),
+
             }),
         }),
     ],
