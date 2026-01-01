@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Patch,
   Delete,
@@ -8,10 +9,12 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
-  Inject,
-  BadRequestException,
-  Get,
   UploadedFile,
+  Inject,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -20,33 +23,36 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiBody,
+  ApiResponse,
 } from '@nestjs/swagger';
-import { memoryStorage } from 'multer'; // <--- Import memoryStorage
-import {
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
-} from '@nestjs/common'; // <--- Import your preferred validators
 import { ProductsService } from './products.service';
 
+import { multerMemoryOptions } from '../common/utils/multer-memory.util';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { QueryProductsDto } from './dto/query-products.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { QueryProductsDto } from './dto/query-products.dto';
 import { UploadthingService } from 'src/common/services/upload-thing.service';
+import { UploadImageDto } from './dto/upload-image.dto';
 
+@ApiTags('Products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) { }
 
   @Get()
+  @ApiOperation({ summary: 'Get all products with filters, pagination, and search' })
+  @ApiResponse({ status: 200, description: 'Returns paginated products.' })
   list(@Query() query: QueryProductsDto) {
     return this.productsService.list(query);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a single product by ID' })
+  @ApiResponse({ status: 200, description: 'Product details.' })
+  @ApiResponse({ status: 404, description: 'Product not found.' })
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
@@ -54,6 +60,11 @@ export class ProductsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Create a new product (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Product created.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden (Requires Admin role).' })
   create(@Body() dto: CreateProductDto) {
     return this.productsService.create(dto);
   }
@@ -61,6 +72,9 @@ export class ProductsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update a product (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Product updated.' })
   update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return this.productsService.update(id, dto);
   }
@@ -68,6 +82,9 @@ export class ProductsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete a product (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Product deleted.' })
   delete(@Param('id') id: string) {
     return this.productsService.delete(id);
   }
@@ -78,30 +95,18 @@ export class ProductsController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Upload product image via UploadThing' })
   @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: 'Image uploaded and URL updated.' })
   @ApiBody({
-    description: 'Upload a product image',
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
+    type: UploadImageDto,
   })
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: memoryStorage(), // <--- Use memory storage explicitly
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file', multerMemoryOptions))
   async uploadProductImage(
     @Param('id') id: string,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 }), // 2MB
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp|gif)$/ }), // Regex to allow common images
+          new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp|gif)$/ }),
         ],
         exceptionFactory: (error) => new BadRequestException(error),
       }),
@@ -109,18 +114,8 @@ export class ProductsController {
     file: Express.Multer.File,
     @Inject(UploadthingService) uploadthingService: UploadthingService,
   ) {
-    if (!file) {
-      throw new BadRequestException('File is required');
-    }
-
-    // 1. Upload to UploadThing
     const uploadResult = await uploadthingService.uploadFile(file);
-
-    // 2. Extract URL (Note: UploadThing SDK might return result.data.url or result.url)
     const imageUrl = uploadResult.data?.ufsUrl!;
-
-    // 3. Update Product in DB
     return this.productsService.updateImageUrl(id, imageUrl);
   }
-
 }
