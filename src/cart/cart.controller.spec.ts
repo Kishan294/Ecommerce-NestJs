@@ -1,18 +1,51 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
 import { CartController } from './cart.controller';
+import { CartService } from './cart.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-describe('CartController', () => {
-  let controller: CartController;
+describe('CartController (e2e)', () => {
+  let app: INestApplication;
+  const mockCartService = {
+    getCart: jest.fn(),
+    addItem: jest.fn(),
+    updateItem: jest.fn(),
+    removeItem: jest.fn(),
+  };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [CartController],
-    }).compile();
+      providers: [
+        { provide: CartService, useValue: mockCartService },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({
+        canActivate: (context: any) => {
+          const req = context.switchToHttp().getRequest();
+          req.user = { userId: '1' };
+          return true;
+        },
+      })
+      .compile();
 
-    controller = module.get<CartController>(CartController);
+    app = moduleFixture.createNestApplication();
+    await app.init();
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it('GET /cart should return cart', () => {
+    const mockCart = { id: 'c1', items: [] };
+    mockCartService.getCart.mockResolvedValue(mockCart);
+
+    return request(app.getHttpServer())
+      .get('/cart')
+      .expect(200)
+      .expect(mockCart);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

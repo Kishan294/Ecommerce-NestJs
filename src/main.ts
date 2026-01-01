@@ -15,20 +15,39 @@ async function bootstrap() {
   // 1. Logger
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
-  // 2. Security Headers (Helmet)
-  app.use(helmet());
+  // 2. Helmet (Security Headers)
+  // Content Security Policy is strict by default in v7, but defaults might block Swagger UI.
+  // We customize it to allow inline scripts for Swagger.
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"], // Only allow resources from this origin
+          imgSrc: ["'", "'self'", "data:", "https:"], // Allow images and Swagger
+          scriptSrc: ["'", "'self'", "'unsafe-inline'"], // Allow inline scripts for Swagger UI
+          styleSrc: ["'", "'self'", "'unsafe-inline'"], // Allow inline styles for Swagger UI
+        },
+      },
+    }),
+  );
 
-  // 3. Swagger Configuration
+  // 3. CORS (Restrict to specific frontend)
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    credentials: true, // If using cookies
+  });
+
+  // 4. Swagger Setup
   const config = new DocumentBuilder()
     .setTitle('E-Commerce API')
-    .setDescription('Production-grade E-commerce backend with NestJS, Prisma & UploadThing')
+    .setDescription('Production-grade E-commerce backend with NestJS & Prisma')
     .setVersion('1.0')
     .addTag('Auth')
     .addTag('Products')
     .addTag('Categories')
     .addTag('Cart')
     .addTag('Orders')
-    .addBearerAuth( // Enable JWT Button in Swagger UI
+    .addBearerAuth(
       {
         type: 'http',
         scheme: 'bearer',
@@ -37,29 +56,23 @@ async function bootstrap() {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'JWT-auth', // Key to use in @ApiBearerAuth
+      'JWT-auth',
     )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // 4. Global Pipes & Interceptors & Filters
+  // 5. Global Pipes & Interceptors & Filters
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
+      whitelist: true, // <--- SECURITY: Removes extra fields
+      forbidNonWhitelisted: true, // <--- SECURITY: Throws error if extra fields exist
       transform: true,
     }),
   );
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
-
-  // 5. CORS
-  app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
-    credentials: true,
-  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

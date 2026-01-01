@@ -15,6 +15,8 @@ import { OrdersService } from './orders/orders.service';
 import { OrdersController } from './orders/orders.controller';
 import { OrdersModule } from './orders/orders.module';
 import { LoggerModule } from './logger/logger.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -26,9 +28,21 @@ import { LoggerModule } from './logger/logger.module';
     CategoriesModule,
     CartModule,
     OrdersModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // Time-To-Live: 60 seconds
+        limit: 10, // Max 10 requests per 60 seconds per IP
+      },
+    ]),
     LoggerModule
   ],
   controllers: [AppController, HealthController, CartController, OrdersController],
-  providers: [AppService, CartService, OrdersService],
+  providers: [AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    CartService,
+    OrdersService],
 })
 export class AppModule { }
