@@ -165,4 +165,23 @@ export class ProductsService {
       throw err;
     }
   }
+
+  async updateImageUrl(id: string, imageUrl: string) {
+    try {
+      return await this.prisma.product.update({
+        where: { id },
+        data: { imageUrl },
+        include: {
+          category: {
+            select: { id: true, name: true, slug: true },
+          },
+        },
+      });
+    } catch (err: any) {
+      if (err.code === 'P2025') {
+        throw new NotFoundException('Product not found');
+      }
+      throw err;
+    }
+  }
 }

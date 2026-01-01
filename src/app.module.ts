@@ -14,6 +14,7 @@ import { CartModule } from './cart/cart.module';
 import { OrdersService } from './orders/orders.service';
 import { OrdersController } from './orders/orders.controller';
 import { OrdersModule } from './orders/orders.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { OrdersModule } from './orders/orders.module';
     CategoriesModule,
     CartModule,
     OrdersModule,
+    LoggerModule
   ],
   controllers: [AppController, HealthController, CartController, OrdersController],
   providers: [AppService, CartService, OrdersService],

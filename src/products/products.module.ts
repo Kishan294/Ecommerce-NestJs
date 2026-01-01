@@ -3,17 +3,19 @@ import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { UploadthingService } from 'src/common/services/upload-thing.service';
+
 
 @Module({
   imports: [
     PrismaModule,
     CacheModule.register({
-      isGlobal: false, // cache only imported where needed
-      ttl: 60, // default ttl in seconds
+      isGlobal: false,
+      ttl: 60,
     }),
   ],
   controllers: [ProductsController],
-  providers: [ProductsService],
+  providers: [ProductsService, UploadthingService],
   exports: [ProductsService],
 })
 export class ProductsModule { }

@@ -20,6 +20,7 @@ import * as Joi from 'joi';
                     otherwise: Joi.optional().default('dev-secret-do-not-use-in-prod'),
                 }),
                 JWT_EXPIRATION: Joi.string().default('1h'),
+                UPLOADTHING_TOKEN: Joi.string().required(),
             }),
         }),
     ],

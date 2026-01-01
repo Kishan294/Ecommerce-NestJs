@@ -10,6 +10,7 @@ export class ProductResponseDto implements Omit<Product, 'categoryId'> {
   stock!: number;
   sku!: string | null;
   categoryId!: string;
+  imageUrl!: string | null;
   createdAt!: Date;
   updatedAt!: Date;
 }
