@@ -38,12 +38,21 @@ import { UploadthingService } from 'src/common/services/upload-thing.service';
 import { UploadImageDto } from './dto/upload-image.dto';
 import { ImageFileTypeValidator } from './validator/image-validator';
 
+/**
+ * Controller for managing products.
+ * Provides endpoints for listing, viewing, creating, updating, and deleting products.
+ */
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService,
     private readonly uploadthingService: UploadthingService) { }
 
+  /**
+   * Retrieves a paginated list of products based on query filters.
+   * @param query Filters, sorting, and pagination parameters.
+   * @returns A paginated list of products.
+   */
   @Get()
   @ApiOperation({ summary: 'Get all products with filters, pagination, and search' })
   @ApiResponse({ status: 200, description: 'Returns paginated products.' })
@@ -51,6 +60,12 @@ export class ProductsController {
     return this.productsService.list(query);
   }
 
+  /**
+   * Retrieves a single product by its unique identifier.
+   * @param id The ID of the product.
+   * @returns The product details.
+   * @throws NotFoundException if the product does not exist.
+   */
   @Get(':id')
   @ApiOperation({ summary: 'Get a single product by ID' })
   @ApiResponse({ status: 200, description: 'Product details.' })
@@ -59,6 +74,11 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
+  /**
+   * Creates a new product. (Admin only)
+   * @param dto The product data.
+   * @returns The newly created product.
+   */
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -71,6 +91,12 @@ export class ProductsController {
     return this.productsService.create(dto);
   }
 
+  /**
+   * Updates an existing product. (Admin only)
+   * @param id The ID of the product to update.
+   * @param dto The updated data.
+   * @returns The updated product.
+   */
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -81,6 +107,11 @@ export class ProductsController {
     return this.productsService.update(id, dto);
   }
 
+  /**
+   * Deletes a product. (Admin only)
+   * @param id The ID of the product to delete.
+   * @returns A promise that resolves when the product is deleted.
+   */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -91,6 +122,12 @@ export class ProductsController {
     return this.productsService.delete(id);
   }
 
+  /**
+   * Uploads an image for a specific product using UploadThing. (Admin only)
+   * @param id The ID of the product.
+   * @param file The image file to upload.
+   * @returns The updated product with the new image URL.
+   */
   @Post(':id/image')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')

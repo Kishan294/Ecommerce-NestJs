@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UTApi } from 'uploadthing/server';
 
+/**
+ * Service to handle file uploads and deletions using UploadThing.
+ */
 @Injectable()
 export class UploadthingService {
   private utapi: UTApi;
@@ -18,7 +21,11 @@ export class UploadthingService {
     });
   }
 
-  // Upload single file
+  /**
+   * Uploads a single file to UploadThing.
+   * @param file The file from Multer memory storage.
+   * @returns The upload result including the URL.
+   */
   async uploadFile(file: Express.Multer.File) {
     try {
       // Convert Buffer to Uint8Array then to ArrayBuffer for Blob compatibility
@@ -43,7 +50,11 @@ export class UploadthingService {
     }
   }
 
-  // Delete files
+  /**
+   * Deletes one or more files from UploadThing storage.
+   * @param fileKeys Array of file keys to delete.
+   * @returns The result of the deletion.
+   */
   async deleteFiles(fileKeys: string[]) {
     try {
       return await this.utapi.deleteFiles(fileKeys);

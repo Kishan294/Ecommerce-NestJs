@@ -14,6 +14,10 @@ import { HealthModule } from './health/health.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+/**
+ * The main application module that bundles all the modules together.
+ * It configures global guards, shared services, and imports all domain-specific modules.
+ */
 @Module({
   imports: [
     AppConfigModule,

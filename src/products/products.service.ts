@@ -10,6 +10,10 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Prisma } from 'src/generated/prisma/client';
 import { Decimal } from '@prisma/client/runtime/client';
 
+/**
+ * Service for handling product-related business logic and database operations.
+ * Implements caching for individual product lookups.
+ */
 @Injectable()
 export class ProductsService {
   constructor(
@@ -17,6 +21,11 @@ export class ProductsService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) { }
 
+  /**
+   * Builds the 'where' clause for Prisma queries based on filters.
+   * @param query The query parameters.
+   * @returns A Prisma ProductWhereInput object.
+   */
   private buildWhere(query: QueryProductsDto): Prisma.ProductWhereInput {
     const { search, categoryId, minPrice, maxPrice, inStockOnly } = query;
     const where: Prisma.ProductWhereInput = {};
@@ -50,6 +59,11 @@ export class ProductsService {
     return where;
   }
 
+  /**
+   * Lists products with support for searching, filtering, and pagination.
+   * @param query Filtering and pagination criteria.
+   * @returns A paginated response object.
+   */
   async list(query: QueryProductsDto) {
     const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = query;
     const skip = (page - 1) * limit;
@@ -77,6 +91,12 @@ export class ProductsService {
     };
   }
 
+  /**
+   * Finds a product by ID, with caching.
+   * @param id The ID of the product.
+   * @returns The product details.
+   * @throws NotFoundException if the product is not found.
+   */
   async findOne(id: string) {
     const cacheKey = `product:${id}`;
     const cached = await this.cacheManager.get<any>(cacheKey);
@@ -101,6 +121,12 @@ export class ProductsService {
     return product;
   }
 
+  /**
+   * Creates a new product.
+   * @param dto The product creation data.
+   * @returns The created product.
+   * @throws NotFoundException if the category ID is invalid.
+   */
   async create(dto: CreateProductDto) {
     try {
       const product = await this.prisma.product.create({
@@ -131,6 +157,13 @@ export class ProductsService {
     }
   }
 
+  /**
+   * Updates an existing product and clears its cache.
+   * @param id The ID of the product.
+   * @param dto The update data.
+   * @returns The updated product.
+   * @throws NotFoundException if the product is not found.
+   */
   async update(id: string, dto: UpdateProductDto) {
     try {
       const product = await this.prisma.product.update({
@@ -161,6 +194,11 @@ export class ProductsService {
     }
   }
 
+  /**
+   * Deletes a product and clears its cache.
+   * @param id The ID of the product.
+   * @throws NotFoundException if the product is not found.
+   */
   async delete(id: string) {
     try {
       await this.prisma.product.delete({ where: { id } });
@@ -173,6 +211,13 @@ export class ProductsService {
     }
   }
 
+  /**
+   * Updates the image URL for a product.
+   * @param id The ID of the product.
+   * @param imageUrl The new image URL.
+   * @returns The updated product.
+   * @throws NotFoundException if the product is not found.
+   */
   async updateImageUrl(id: string, imageUrl: string) {
     try {
       return await this.prisma.product.update({

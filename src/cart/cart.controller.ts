@@ -6,6 +6,10 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+/**
+ * Controller for managing the user's shopping cart.
+ * All endpoints require authentication.
+ */
 @ApiTags('Cart')
 @ApiBearerAuth('JWT-auth')
 @Controller('cart')
@@ -13,6 +17,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class CartController {
   constructor(private readonly cartService: CartService) { }
 
+  /**
+   * Retrieves the current user's cart and its items.
+   * @param user The current authenticated user.
+   * @returns The user's cart.
+   */
   @Get()
   @ApiOperation({ summary: 'Get current user cart' })
   @ApiResponse({ status: 200, description: 'Return cart.' })
@@ -20,6 +29,12 @@ export class CartController {
     return this.cartService.getCart(user.userId);
   }
 
+  /**
+   * Adds a product to the user's cart.
+   * @param user The current authenticated user.
+   * @param dto The item data (productId, quantity).
+   * @returns The added cart item.
+   */
   @Post('items')
   @ApiOperation({ summary: 'Add item to cart' })
   @ApiResponse({ status: 201, description: 'Item added.' })
@@ -27,6 +42,13 @@ export class CartController {
     return this.cartService.addItem(user.userId, dto);
   }
 
+  /**
+   * Updates the quantity of an item in the user's cart.
+   * @param user The current authenticated user.
+   * @param itemId The ID of the cart item to update.
+   * @param dto The new quantity.
+   * @returns The updated cart item.
+   */
   @Patch('items/:itemId')
   @ApiOperation({ summary: 'Update cart item quantity' })
   @ApiResponse({ status: 200, description: 'Item updated.' })
@@ -38,6 +60,12 @@ export class CartController {
     return this.cartService.updateItem(user.userId, itemId, dto);
   }
 
+  /**
+   * Removes an item from the user's cart.
+   * @param user The current authenticated user.
+   * @param itemId The ID of the cart item to remove.
+   * @returns A success message.
+   */
   @Delete('items/:itemId')
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiResponse({ status: 200, description: 'Item removed.' })

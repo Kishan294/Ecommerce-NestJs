@@ -17,6 +17,10 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+/**
+ * Controller for managing customer orders.
+ * Handles the checkout process, order history, and administrative status updates.
+ */
 @ApiTags('Orders')
 @ApiBearerAuth('JWT-auth')
 @Controller('orders')
@@ -24,6 +28,13 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) { }
 
+  /**
+   * Processes the checkout for the current user's cart.
+   * Creates an order and clears the cart.
+   * @param user The current authenticated user.
+   * @param dto Checkout details (shipping, payment method).
+   * @returns The created order details.
+   */
   @Post('checkout')
   @ApiOperation({ summary: 'Checkout current cart' })
   @ApiResponse({ status: 201, description: 'Order created.' })
@@ -31,6 +42,11 @@ export class OrdersController {
     return this.ordersService.checkout(user.userId, dto);
   }
 
+  /**
+   * Retrieves the order history for the current user.
+   * @param user The current authenticated user.
+   * @returns A list of the user's orders.
+   */
   @Get()
   @ApiOperation({ summary: 'Get order history' })
   @ApiResponse({ status: 200, description: 'Return order list.' })
@@ -38,6 +54,13 @@ export class OrdersController {
     return this.ordersService.findAll(user.userId);
   }
 
+  /**
+   * Retrieves the details of a specific order.
+   * Customers can only see their own orders; Admins can see any order.
+   * @param user The current authenticated user.
+   * @param id The ID of the order.
+   * @returns The order details.
+   */
   @Get(':id')
   @ApiOperation({ summary: 'Get order details' })
   @ApiResponse({ status: 200, description: 'Return order.' })
@@ -50,6 +73,12 @@ export class OrdersController {
     return this.ordersService.findOne(id, user.userId, isAdmin);
   }
 
+  /**
+   * Updates the status of an existing order. (Admin only)
+   * @param id The ID of the order to update.
+   * @param dto The new status.
+   * @returns The updated order.
+   */
   @Patch(':id/status')
   @UseGuards(RolesGuard)
   @Roles('ADMIN')

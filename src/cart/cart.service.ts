@@ -3,11 +3,19 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AddItemDto } from './dto/add-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 
+/**
+ * Service for handling shopping cart logic.
+ * Manages adding, updating, and removing items from the cart, while checking stock availability.
+ */
 @Injectable()
 export class CartService {
   constructor(private readonly prisma: PrismaService) { }
 
-  // Helper to get or create a cart for a user
+  /**
+   * Helper method to get an existing cart or create a new one for a user.
+   * @param userId The ID of the user.
+   * @returns The user's cart including items.
+   */
   private async getOrCreateCart(userId: string) {
     let cart = await this.prisma.cart.findUnique({
       where: { userId },
@@ -23,10 +31,24 @@ export class CartService {
     return cart;
   }
 
+  /**
+   * Retrieves the user's cart.
+   * @param userId The ID of the user.
+   * @returns The user's cart.
+   */
   async getCart(userId: string) {
     return this.getOrCreateCart(userId);
   }
 
+  /**
+   * Adds an item to the cart. If the item already exists, its quantity is increased.
+   * Validates product existence and stock availability.
+   * @param userId The ID of the user.
+   * @param dto The item details.
+   * @returns The updated cart item.
+   * @throws NotFoundException if product doesn't exist.
+   * @throws BadRequestException if stock is insufficient.
+   */
   async addItem(userId: string, dto: AddItemDto) {
     // 1. Check product exists and has stock
     const product = await this.prisma.product.findUnique({
@@ -80,6 +102,15 @@ export class CartService {
     return cartItem;
   }
 
+  /**
+   * Updates the quantity of a specific cart item.
+   * @param userId The ID of the user.
+   * @param itemId The ID of the cart item.
+   * @param dto The new quantity.
+   * @returns The updated cart item.
+   * @throws NotFoundException if cart item doesn't exist for the user.
+   * @throws BadRequestException if stock is insufficient.
+   */
   async updateItem(userId: string, itemId: string, dto: UpdateItemDto) {
     // 1. Verify item belongs to user's cart
     const cartItem = await this.prisma.cartItem.findFirst({
@@ -102,6 +133,13 @@ export class CartService {
     });
   }
 
+  /**
+   * Removes an item from the cart.
+   * @param userId The ID of the user.
+   * @param itemId The ID of the cart item.
+   * @returns A success message.
+   * @throws NotFoundException if the cart item doesn't exist for the user.
+   */
   async removeItem(userId: string, itemId: string) {
     // Verify ownership
     const cartItem = await this.prisma.cartItem.findFirst({
@@ -116,6 +154,10 @@ export class CartService {
     return { message: 'Item removed' };
   }
 
+  /**
+   * Clears all items from the user's cart.
+   * @param userId The ID of the user.
+   */
   async clearCart(userId: string) {
     const cart = await this.prisma.cart.findUnique({ where: { userId } });
     if (cart) {

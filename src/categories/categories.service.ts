@@ -6,10 +6,18 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { QueryCategoriesDto } from './dto/query-categories.dto';
 import { Prisma } from 'src/generated/prisma/client';
 
+/**
+ * Service for handling category-related business logic and database operations.
+ */
 @Injectable()
 export class CategoriesService {
   constructor(private readonly prisma: PrismaService) { }
 
+  /**
+   * Lists categories with support for searching, filtering by parent, and pagination.
+   * @param query Filtering and pagination criteria.
+   * @returns A paginated response object.
+   */
   async list(query: QueryCategoriesDto) {
     const { page = 1, limit = 20, search, sortBy = 'name', sortOrder = 'asc', parentId } = query;
     const skip = (page - 1) * limit;
@@ -43,6 +51,12 @@ export class CategoriesService {
     };
   }
 
+  /**
+   * Finds a single category by its ID.
+   * @param id The ID of the category.
+   * @returns The category details.
+   * @throws NotFoundException if the category is not found.
+   */
   async findOne(id: string) {
     const category = await this.prisma.category.findUnique({
       where: { id },
@@ -53,6 +67,11 @@ export class CategoriesService {
     return category;
   }
 
+  /**
+   * Creates a new category.
+   * @param dto The category data.
+   * @returns The newly created category.
+   */
   async create(dto: CreateCategoryDto) {
     return this.prisma.category.create({
       data: {
@@ -63,6 +82,13 @@ export class CategoriesService {
     });
   }
 
+  /**
+   * Updates an existing category.
+   * @param id The ID of the category.
+   * @param dto The update data.
+   * @returns The updated category.
+   * @throws NotFoundException if the category is not found.
+   */
   async update(id: string, dto: UpdateCategoryDto) {
     try {
       return await this.prisma.category.update({
@@ -77,6 +103,11 @@ export class CategoriesService {
     }
   }
 
+  /**
+   * Deletes a category.
+   * @param id The ID of the category.
+   * @throws NotFoundException if the category is not found.
+   */
   async delete(id: string) {
     try {
       return await this.prisma.category.delete({

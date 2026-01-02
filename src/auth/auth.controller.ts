@@ -8,11 +8,20 @@ import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 
+/**
+ * Controller responsible for handling authentication-related requests.
+ * Includes user registration and login.
+ */
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
 
+  /**
+   * Registers a new user in the system.
+   * @param dto The registration data (email, password).
+   * @returns The newly created user object (without password).
+   */
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'No links', type: UserResponseDto })
@@ -22,6 +31,12 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  /**
+   * Authenticates a user and returns a JWT access token.
+   * Uses the local strategy for initial validation.
+   * @param req The request object containing the validated user.
+   * @returns An object containing the access token.
+   */
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Returns access_token. No links', type: LoginResponseDto })

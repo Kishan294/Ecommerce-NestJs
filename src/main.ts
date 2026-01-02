@@ -7,6 +7,11 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
+/**
+ * The bootstrap function starts the NestJS application.
+ * It configures logging, security headers (Helmet), CORS, Swagger documentation,
+ * global pipes, interceptors, and filters.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,

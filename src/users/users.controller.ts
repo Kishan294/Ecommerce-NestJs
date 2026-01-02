@@ -7,6 +7,10 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser, type CurrentUserData } from '../auth/decorators/current-user.decorator';
 import { UserResponseDto } from '../auth/dto/user-response.dto';
 
+/**
+ * Controller for managing user profiles and listing users.
+ * Requires authentication and appropriate roles for certain endpoints.
+ */
 @ApiTags('Users')
 @ApiBearerAuth('JWT-auth')
 @Controller('users')
@@ -14,6 +18,11 @@ import { UserResponseDto } from '../auth/dto/user-response.dto';
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
+    /**
+     * Retrieves the profile of the currently authenticated user.
+     * @param user The current user data from the JWT.
+     * @returns The user's profile information.
+     */
     @Get('me')
     @ApiOperation({ summary: 'Get current user profile' })
     @ApiResponse({ status: 200, description: 'Return profile.', type: UserResponseDto })
@@ -21,6 +30,10 @@ export class UsersController {
         return this.usersService.findById(user.userId);
     }
 
+    /**
+     * Retrieves a list of all registered users. (Admin only)
+     * @returns A list of users.
+     */
     @Get()
     @Roles('ADMIN')
     @ApiOperation({ summary: 'List all users (Admin only)' })
