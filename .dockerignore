@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+dist
+.env
+.env.local
+.git
+coverage
+uploads
+src/generated/prisma/client # If you don't want to include generated files (optional)

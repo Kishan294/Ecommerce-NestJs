@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # --- POSTGRES DATABASE ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ecommerce
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- NESTJS API ---
+  api:
+    build: .
+    container_name: ecommerce-api
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      # Database Connection (Docker Compose handles networking)
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ecommerce?schema=public
+
+      # App Config
+      NODE_ENV: production
+      PORT: 3000
+      JWT_SECRET: prod-super-secret-key-change-me
+
+      # UploadThing
+      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN} # Inject from host env
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:

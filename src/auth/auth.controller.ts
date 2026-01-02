@@ -5,6 +5,8 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -13,7 +15,7 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({ status: 201, description: 'User successfully created.' })
+  @ApiResponse({ status: 201, description: 'No links', type: UserResponseDto })
   @ApiResponse({ status: 400, description: 'Bad Request (Validation Error).' })
   @ApiBody({ type: RegisterDto })
   async register(@Body() dto: RegisterDto) {
@@ -22,9 +24,9 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
-  @ApiResponse({ status: 200, description: 'Returns access_token.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiTooManyRequestsResponse({ description: 'Too many login attempts. Try again later.' })
+  @ApiResponse({ status: 200, description: 'Returns access_token. No links', type: LoginResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized. No links' })
+  @ApiTooManyRequestsResponse({ description: 'Too many login attempts. Try again later. No links' })
   @ApiBody({ type: LoginDto })
   @UseGuards(AuthGuard('local'))
   // SECURITY: Only 3 login attempts per minute

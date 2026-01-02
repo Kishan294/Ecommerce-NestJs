@@ -8,12 +8,29 @@ import bcrypt from 'bcryptjs';
 export class UsersService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async findAll(): Promise<User[]> {
-        return this.prisma.user.findMany();
+    async findAll(): Promise<Omit<User, 'passwordHash'>[]> {
+        return this.prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
     }
 
-    async findById(id: string): Promise<User> {
-        const user = await this.prisma.user.findUnique({ where: { id } });
+    async findById(id: string): Promise<Omit<User, 'passwordHash'>> {
+        const user = await this.prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
         if (!user) {
             throw new NotFoundException(`User with id ${id} not found`);
         }

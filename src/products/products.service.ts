@@ -102,26 +102,33 @@ export class ProductsService {
   }
 
   async create(dto: CreateProductDto) {
-    const product = await this.prisma.product.create({
-      data: {
-        title: dto.title,
-        slug: dto.slug,
-        description: dto.description,
-        price: dto.price,
-        stock: dto.stock,
-        sku: dto.sku,
-        category: {
-          connect: { id: dto.categoryId },
+    try {
+      const product = await this.prisma.product.create({
+        data: {
+          title: dto.title,
+          slug: dto.slug,
+          description: dto.description,
+          price: dto.price,
+          stock: dto.stock,
+          sku: dto.sku,
+          category: {
+            connect: { id: dto.categoryId },
+          },
         },
-      },
-      include: {
-        category: {
-          select: { id: true, name: true, slug: true },
+        include: {
+          category: {
+            select: { id: true, name: true, slug: true },
+          },
         },
-      },
-    });
+      });
 
-    return product;
+      return product;
+    } catch (err: any) {
+      if (err.code === 'P2025') {
+        throw new NotFoundException(`Category with ID "${dto.categoryId}" not found`);
+      }
+      throw err;
+    }
   }
 
   async update(id: string, dto: UpdateProductDto) {

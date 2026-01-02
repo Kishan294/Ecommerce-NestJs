@@ -36,11 +36,13 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductsDto } from './dto/query-products.dto';
 import { UploadthingService } from 'src/common/services/upload-thing.service';
 import { UploadImageDto } from './dto/upload-image.dto';
+import { ImageFileTypeValidator } from './validator/image-validator';
 
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) { }
+  constructor(private readonly productsService: ProductsService,
+    private readonly uploadthingService: UploadthingService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all products with filters, pagination, and search' })
@@ -106,15 +108,15 @@ export class ProductsController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 }),
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp|gif)$/ }),
+          new ImageFileTypeValidator(),
         ],
         exceptionFactory: (error) => new BadRequestException(error),
       }),
     )
     file: Express.Multer.File,
-    @Inject(UploadthingService) uploadthingService: UploadthingService,
+
   ) {
-    const uploadResult = await uploadthingService.uploadFile(file);
+    const uploadResult = await this.uploadthingService.uploadFile(file);
     const imageUrl = uploadResult.data?.ufsUrl!;
     return this.productsService.updateImageUrl(id, imageUrl);
   }

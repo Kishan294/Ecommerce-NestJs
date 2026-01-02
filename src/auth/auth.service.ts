@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { User } from '../generated/prisma/client'; // adjust path
@@ -32,7 +32,7 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) {
-      throw new UnauthorizedException('Email already registered');
+      throw new ConflictException('Email already registered');
     }
 
     const passwordHash = await this.usersService.hashPassword(dto.password);

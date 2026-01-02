@@ -61,9 +61,13 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('docs', app, document);
 
-  // 5. Global Pipes & Interceptors & Filters
+  // 5. Global Config
+  // app.setGlobalPrefix('api');
+  app.enableShutdownHooks();
+
+  // 6. Global Pipes & Interceptors & Filters
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // <--- SECURITY: Removes extra fields
@@ -77,6 +81,6 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger Documentation: http://localhost:${port}/api`);
+  console.log(`Swagger Documentation: http://localhost:${port}/docs`);
 }
 bootstrap();

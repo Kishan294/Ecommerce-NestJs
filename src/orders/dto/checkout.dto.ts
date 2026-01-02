@@ -1,4 +1,5 @@
-import { IsObject, IsString, IsNotEmpty } from 'class-validator';
+import { IsObject, IsString, IsNotEmpty, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 // Simple validation for address structure
 export class AddressDto {
@@ -24,6 +25,8 @@ export class AddressDto {
 
 export class CheckoutDto {
   @IsObject()
+  @ValidateNested()
+  @Type(() => AddressDto)
   shippingAddress!: AddressDto;
 
   @IsString()
